@@ -3,8 +3,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChatInput } from "@/components/chat-input";
 import { ChatMessage } from "@/components/chat-message";
 import { WelcomeScreen } from "@/components/welcome-screen";
+import { FilePreview } from "@/components/file-preview";
 import { useChatStore } from "@/store/chat-store";
 import { useChatSession } from "@/hooks/use-chat-session";
+import { useWorkspace } from "@/store/workspace-store";
 
 export const Route = createFileRoute("/chat/$threadId")({
   component: ChatThread,
@@ -17,6 +19,7 @@ function ChatThread() {
   const [value, setValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { streaming, streamingId, send, stop, regenerate, editUser } = useChatSession(threadId);
+  const openFilePath = useWorkspace((s) => s.openFilePath);
 
   // If the thread doesn't exist (deleted, or bad URL), send user back to /chat
   useEffect(() => {
@@ -47,33 +50,40 @@ function ChatThread() {
   const empty = chat.messages.length === 0;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={scrollRef} className="scrollbar-thin flex-1 overflow-y-auto">
-        {empty ? (
-          <WelcomeScreen onPick={(p) => send(p)} />
-        ) : (
-          <div className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-6">
-            {chat.messages.map((m) => (
-              <ChatMessage
-                key={m.id}
-                message={m}
-                streaming={streaming && m.id === streamingId}
-                onEdit={m.role === "user" ? editUser : undefined}
-                onRegenerate={m.role === "assistant" ? regenerate : undefined}
-              />
-            ))}
-          </div>
-        )}
+    <div className="flex min-h-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div ref={scrollRef} className="scrollbar-thin flex-1 overflow-y-auto">
+          {empty ? (
+            <WelcomeScreen onPick={(p) => send(p)} />
+          ) : (
+            <div className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-6">
+              {chat.messages.map((m) => (
+                <ChatMessage
+                  key={m.id}
+                  message={m}
+                  streaming={streaming && m.id === streamingId}
+                  onEdit={m.role === "user" ? editUser : undefined}
+                  onRegenerate={m.role === "assistant" ? regenerate : undefined}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <ChatInput
+          value={value}
+          onChange={setValue}
+          onSubmit={submit}
+          onStop={stop}
+          streaming={streaming}
+          autoFocus
+          placeholder={empty ? "Message MiniCoder…" : "Reply to MiniCoder…"}
+        />
       </div>
-      <ChatInput
-        value={value}
-        onChange={setValue}
-        onSubmit={submit}
-        onStop={stop}
-        streaming={streaming}
-        autoFocus
-        placeholder={empty ? "Message MiniCoder…" : "Reply to MiniCoder…"}
-      />
+      {openFilePath && (
+        <div className="hidden w-80 shrink-0 md:block">
+          <FilePreview />
+        </div>
+      )}
     </div>
   );
 }

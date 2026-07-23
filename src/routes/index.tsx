@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, Github, Sparkles } from "lucide-react";
+import { ArrowRight, FolderOpen, Github, Sparkles } from "lucide-react";
 import { Logo, WordMark } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -110,6 +110,12 @@ function Landing() {
           >
             Start chatting
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+          <Link
+            to="/workspace"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <FolderOpen className="h-4 w-4" /> Open Workspace
           </Link>
           <a
             href="https://github.com"
