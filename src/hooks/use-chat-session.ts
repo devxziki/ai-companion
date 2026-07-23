@@ -11,6 +11,8 @@ export function useChatSession(chatId: string | null) {
   const [streaming, setStreaming] = useState(false);
   const handleRef = useRef<StreamHandle | null>(null);
   const streamingIdRef = useRef<string | null>(null);
+  const pendingContentRef = useRef<string | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const send = useCallback(
     async (prompt: string, opts?: { targetChatId?: string }) => {
@@ -51,14 +53,30 @@ export function useChatSession(chatId: string | null) {
         content: `You are an AI coding assistant running in a browser-based app. You can help the user write, review, and edit code. When you suggest file changes, include a JSON block with the files to create or modify.${projectContext ? `\n\n${projectContext}` : ""}`,
       });
 
+      const flushUpdate = (content: string) => {
+        pendingContentRef.current = null;
+        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+        store.updateMessage(targetId, assistant.id, content);
+      };
+      const scheduleUpdate = (content: string) => {
+        pendingContentRef.current = content;
+        if (rafRef.current) return;
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = null;
+          if (pendingContentRef.current !== null) {
+            flushUpdate(pendingContentRef.current);
+          }
+        });
+      };
+
       handleRef.current = streamAI(
         messages,
         model,
         (_chunk, full) => {
-          store.updateMessage(targetId, assistant.id, full);
+          scheduleUpdate(full);
         },
         (full) => {
-          store.updateMessage(targetId, assistant.id, full);
+          flushUpdate(full);
           setStreaming(false);
           handleRef.current = null;
           streamingIdRef.current = null;

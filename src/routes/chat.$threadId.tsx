@@ -27,11 +27,15 @@ function ChatThread() {
     }
   }, [chat, navigate]);
 
-  // Auto-scroll on new content
+  // Auto-scroll on new content (only if user is near bottom)
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    const threshold = 100;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    if (isNearBottom) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }
   }, [chat?.messages.length, chat?.messages[chat.messages.length - 1]?.content]);
 
   const submit = () => {
