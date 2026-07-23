@@ -46,8 +46,23 @@ export async function requestDirPermission(
       return result === "granted";
     }
     return true;
-  } catch {
+  } catch (e) {
+    console.error("requestDirPermission error:", e);
     return false;
+  }
+}
+
+export async function queryPermission(
+  handle: FileSystemDirectoryHandle,
+): Promise<boolean> {
+  try {
+    if (handle.queryPermission) {
+      const result = await handle.queryPermission({ mode: "read" });
+      return result === "granted";
+    }
+    return true;
+  } catch {
+    return true;
   }
 }
 
@@ -149,9 +164,6 @@ export async function listDirectory(
     const dir = path ? (await resolveHandle(root, path)) as FileSystemDirectoryHandle : root;
     if (!dir || dir.kind !== "directory") return [];
 
-    const granted = await requestDirPermission(dir);
-    if (!granted) return [];
-
     const entries: FileEntry[] = [];
 
     if (typeof dir.entries === "function") {
@@ -182,7 +194,8 @@ export async function listDirectory(
       return a.name.localeCompare(b.name);
     });
     return entries;
-  } catch {
+  } catch (e) {
+    console.error("listDirectory error:", e);
     return [];
   }
 }
@@ -194,10 +207,6 @@ export async function readFileTree(
 ): Promise<FileEntry[]> {
   const maxDepth = 5;
   if (depth > maxDepth) return [];
-
-  if (path === "") {
-    await requestDirPermission(root);
-  }
 
   const entries = await listDirectory(root, path);
   const result: FileEntry[] = [];
