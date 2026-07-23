@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { FolderOpen, FileCode } from "lucide-react";
 import { useWorkspace } from "@/store/workspace-store";
 import { FilePreview } from "@/components/file-preview";
+import { FileTabs } from "@/components/file-tabs";
 
 export const Route = createFileRoute("/workspace/")({
   component: WorkspaceIndex,
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/workspace/")({
 function WorkspaceIndex() {
   const rootHandle = useWorkspace((s) => s.rootHandle);
   const rootName = useWorkspace((s) => s.rootName);
-  const openFilePath = useWorkspace((s) => s.openFilePath);
+  const openFiles = useWorkspace((s) => s.openFiles);
 
   if (!rootHandle) {
     return (
@@ -28,10 +29,11 @@ function WorkspaceIndex() {
     );
   }
 
-  if (openFilePath) {
+  if (openFiles.length > 0) {
     return (
-      <div className="flex min-h-0 flex-1">
-        <div className="flex-1">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <FileTabs />
+        <div className="flex flex-1">
           <FilePreview />
         </div>
       </div>

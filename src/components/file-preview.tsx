@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Editor, { loader } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
-import { X, FileCode, Copy, Check } from "lucide-react";
 import { useWorkspace } from "@/store/workspace-store";
 import { useSettings } from "@/store/settings-store";
 import { readFile } from "@/lib/fs-access";
@@ -43,39 +42,36 @@ function defineMonacoThemes(monaco: typeof import("monaco-editor")) {
 
 export function FilePreview() {
   const rootHandle = useWorkspace((s) => s.rootHandle);
-  const openFilePath = useWorkspace((s) => s.openFilePath);
-  const openFileContent = useWorkspace((s) => s.openFileContent);
-  const setOpenFile = useWorkspace((s) => s.setOpenFile);
+  const openFiles = useWorkspace((s) => s.openFiles);
+  const activeFilePath = useWorkspace((s) => s.activeFilePath);
+  const openFile = useWorkspace((s) => s.openFile);
   const appThemeId = useSettings((s) => s.theme);
-  const [copied, setCopied] = useState(false);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  useEffect(() => {
-    if (openFilePath && openFileContent === null && rootHandle) {
-      readFile(rootHandle, openFilePath).then((content) => {
-        setOpenFile(openFilePath, content ?? "// Unable to read file");
-      });
-    }
-  }, [openFilePath, rootHandle]);
+  const file = openFiles.find((f) => f.path === activeFilePath);
+  const openFilePath = file?.path ?? null;
+  const openFileContent = file?.content ?? null;
 
   useEffect(() => {
     loader.init().then(defineMonacoThemes);
   }, []);
+
+  useEffect(() => {
+    if (activeFilePath) {
+      const f = openFiles.find((x) => x.path === activeFilePath);
+      if (f && f.content === null && rootHandle) {
+        readFile(rootHandle, activeFilePath).then((content) => {
+          openFile(activeFilePath, content ?? "// Unable to read file");
+        });
+      }
+    }
+  }, [activeFilePath]);
 
   if (!openFilePath) return null;
 
   const ext = openFilePath.split(".").pop()?.toLowerCase() ?? "";
   const isImage = ["png", "jpg", "jpeg", "gif", "svg", "ico", "webp"].includes(ext);
 
-  const copyContent = () => {
-    if (openFileContent) {
-      navigator.clipboard.writeText(openFileContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  // Map app theme to Monaco theme
   const monacoTheme = EDITOR_THEMES.find((t) => t.id === appThemeId)
     ? appThemeId
     : getAppTheme(appThemeId).type === "light"
@@ -83,35 +79,9 @@ export function FilePreview() {
       : "vs-dark";
 
   const lang = detectLanguage(openFilePath);
-  const fileName = openFilePath.split("/").pop();
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
-        <span className="truncate text-xs font-medium text-foreground" title={openFilePath}>
-          <FileCode className="mr-1.5 inline h-3.5 w-3.5" />
-          {fileName}
-          <span className="ml-2 text-muted-foreground/60 font-normal">{lang}</span>
-        </span>
-        <div className="flex items-center gap-0.5">
-          {openFileContent && (
-            <button
-              onClick={copyContent}
-              className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
-              title="Copy content"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-            </button>
-          )}
-          <button
-            onClick={() => setOpenFile(null, null)}
-            className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
-            title="Close"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
       <div className="flex-1 overflow-hidden">
         {isImage && openFileContent ? (
           <div className="flex h-full items-center justify-center bg-background p-4">

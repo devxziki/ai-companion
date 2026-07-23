@@ -39,8 +39,7 @@ export function FileTree() {
   const rootName = useWorkspace((s) => s.rootName);
   const expandedPaths = useWorkspace((s) => s.expandedPaths);
   const toggleExpanded = useWorkspace((s) => s.toggleExpanded);
-  const openFilePath = useWorkspace((s) => s.openFilePath);
-  const setOpenFile = useWorkspace((s) => s.setOpenFile);
+  const activeFilePath = useWorkspace((s) => s.activeFilePath);
   const clear = useWorkspace((s) => s.clear);
 
   if (!rootHandle) return null;
@@ -77,8 +76,8 @@ function DirectoryTree({ dirPath, depth }: { dirPath: string; depth: number }) {
   const rootHandle = useWorkspace((s) => s.rootHandle)!;
   const expandedPaths = useWorkspace((s) => s.expandedPaths);
   const toggleExpanded = useWorkspace((s) => s.toggleExpanded);
-  const openFilePath = useWorkspace((s) => s.openFilePath);
-  const setOpenFile = useWorkspace((s) => s.setOpenFile);
+  const activeFilePath = useWorkspace((s) => s.activeFilePath);
+  const openFile = useWorkspace((s) => s.openFile);
   const [entries, setEntries] = useState<{ name: string; kind: string; path: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -109,15 +108,15 @@ function DirectoryTree({ dirPath, depth }: { dirPath: string; depth: number }) {
                 if (isDir) {
                   toggleExpanded(entry.path);
                 } else {
-                  setOpenFile(entry.path, null);
+                  openFile(entry.path, null);
                   readFile(rootHandle, entry.path).then((content) => {
-                    setOpenFile(entry.path, content ?? "// Unable to read file");
+                    updateFileContent(entry.path, content ?? "// Unable to read file");
                   });
                 }
               }}
               className={cn(
                 "flex w-full items-center gap-1 rounded-md px-2 py-1 text-left text-xs transition-colors",
-                openFilePath === entry.path
+                activeFilePath === entry.path
                   ? "bg-brand/15 text-brand"
                   : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
               )}
