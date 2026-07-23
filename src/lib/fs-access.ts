@@ -8,25 +8,40 @@ function joinPath(...parts: string[]): string {
   return parts.filter(Boolean).join("/").replace(/\/+/g, "/");
 }
 
-async function resolveHandle(
+async function resolveFileHandle(
   root: FileSystemDirectoryHandle,
   path: string,
-): Promise<FileSystemFileHandle | FileSystemDirectoryHandle | null> {
+): Promise<FileSystemFileHandle | null> {
   const parts = path.split("/").filter(Boolean);
-  let handle: FileSystemDirectoryHandle | FileSystemFileHandle = root;
+  let dir = root;
   for (let i = 0; i < parts.length; i++) {
     const isLast = i === parts.length - 1;
     try {
       if (isLast) {
-        handle = await handle.getFileHandle(parts[i]);
-      } else {
-        handle = await handle.getDirectoryHandle(parts[i]);
+        return await dir.getFileHandle(parts[i]);
       }
+      dir = await dir.getDirectoryHandle(parts[i]);
     } catch {
       return null;
     }
   }
-  return handle;
+  return null;
+}
+
+async function resolveDirHandle(
+  root: FileSystemDirectoryHandle,
+  path: string,
+): Promise<FileSystemDirectoryHandle | null> {
+  const parts = path.split("/").filter(Boolean);
+  let dir = root;
+  try {
+    for (const part of parts) {
+      dir = await dir.getDirectoryHandle(part);
+    }
+    return dir;
+  } catch {
+    return null;
+  }
 }
 
 export async function pickDirectory(): Promise<FileSystemDirectoryHandle | null> {
@@ -71,9 +86,9 @@ export async function readFile(
   path: string,
 ): Promise<string | null> {
   try {
-    const handle = await resolveHandle(root, path);
-    if (!handle || handle.kind !== "file") return null;
-    const file = await (handle as FileSystemFileHandle).getFile();
+    const handle = await resolveFileHandle(root, path);
+    if (!handle) return null;
+    const file = await handle.getFile();
     return await file.text();
   } catch {
     return null;
@@ -161,7 +176,8 @@ export async function listDirectory(
   path: string = "",
 ): Promise<FileEntry[]> {
   try {
-    const dir = path ? (await resolveHandle(root, path)) as FileSystemDirectoryHandle : root;
+    const dir = path ? await resolveDirHandle(root, path) : root;
+    if (!dir) return [];
     if (!dir || dir.kind !== "directory") return [];
 
     const entries: FileEntry[] = [];
