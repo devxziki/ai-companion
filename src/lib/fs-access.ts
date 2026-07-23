@@ -111,8 +111,7 @@ export async function readFileTree(
   path: string = "",
   depth: number = 0,
 ): Promise<string[]> {
-  const maxDepth = 5;
-  if (depth > maxDepth) return [];
+  if (depth > 20) return [];
   try {
     const entries = await listDirectory(root, path);
     const result: string[] = [];
