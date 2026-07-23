@@ -2,8 +2,6 @@ import { useCallback, useRef, useState } from "react";
 import { streamAI, generateTitle, type StreamHandle } from "@/lib/ai";
 import { newMessage, useChatStore } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
-import { useWorkspace } from "@/store/workspace-store";
-import { writeFile } from "@/lib/fs-access";
 
 export function useChatSession(chatId: string | null) {
   const store = useChatStore();
@@ -43,18 +41,6 @@ export function useChatSession(chatId: string | null) {
         content: "You are an AI coding assistant running in a browser-based app. You can help the user write, review, and edit code. When you suggest file changes, include a JSON block with the files to create or modify.",
       });
 
-      const ws = useWorkspace.getState();
-      if (ws.rootHandle && ws.rootName) {
-        const treeDesc = ws.fileTree
-          .slice(0, 200)
-          .map((e) => `  ${e.path}${e.kind === "directory" ? "/" : ""}`)
-          .join("\n");
-        messages.unshift({
-          role: "system",
-          content: `You have access to a local workspace folder "${ws.rootName}" with these files:\n${treeDesc || "  (empty directory)\n"}\nYou can read and write files. When the user asks you to create or edit files, respond with the file contents. After your explanation, include a JSON code block with files to create/modify:\n\`\`\`json\n{"files": [{"path": "relative/path.ext", "content": "file content here"}]}\n\`\`\`\nAlways use relative paths from the workspace root. Do not write files without user consent.`,
-        });
-      }
-
       handleRef.current = streamAI(
         messages,
         model,
@@ -66,7 +52,6 @@ export function useChatSession(chatId: string | null) {
           setStreaming(false);
           handleRef.current = null;
           streamingIdRef.current = null;
-          executeFileOps(full);
         },
         (err) => {
           store.updateMessage(targetId, assistant.id, `Error: ${err.message}`);
@@ -115,39 +100,4 @@ export function useChatSession(chatId: string | null) {
   );
 
   return { streaming, streamingId: streamingIdRef.current, send, stop, regenerate, editUser };
-}
-
-async function executeFileOps(aiResponse: string) {
-  const ws = useWorkspace.getState();
-  const root = ws.rootHandle;
-  if (!root) return;
-
-  const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/);
-  if (!jsonMatch) return;
-
-  try {
-    const parsed = JSON.parse(jsonMatch[1]);
-    const files: { path: string; content: string }[] = parsed.files ?? [];
-    if (files.length === 0) return;
-
-    let report = "\n\n---\n**File operations:**\n";
-    for (const f of files) {
-      const ok = await writeFile(root, f.path, f.content);
-      report += `- ${ok ? "✅" : "❌"} ${f.path}\n`;
-    }
-
-    const lastMsg = useChatStore.getState().chats[ws.rootName];
-    // Append file operation report to the last assistant message
-    const store = useChatStore.getState();
-    for (const chat of Object.values(store.chats)) {
-      const msgs = chat.messages;
-      const last = msgs[msgs.length - 1];
-      if (last?.role === "assistant") {
-        store.updateMessage(chat.id, last.id, last.content + report);
-        break;
-      }
-    }
-  } catch {
-    // ignore parse errors
-  }
 }

@@ -3,10 +3,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChatInput } from "@/components/chat-input";
 import { ChatMessage } from "@/components/chat-message";
 import { WelcomeScreen } from "@/components/welcome-screen";
-import { FilePreview } from "@/components/file-preview";
 import { useChatStore } from "@/store/chat-store";
 import { useChatSession } from "@/hooks/use-chat-session";
-import { useWorkspace } from "@/store/workspace-store";
 
 export const Route = createFileRoute("/chat/$threadId")({
   component: ChatThread,
@@ -19,7 +17,6 @@ function ChatThread() {
   const [value, setValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { streaming, streamingId, send, stop, regenerate, editUser } = useChatSession(threadId);
-  const openFilePath = useWorkspace((s) => s.openFilePath);
 
   // If the thread doesn't exist (deleted, or bad URL), send user back to /chat
   useEffect(() => {
@@ -79,11 +76,6 @@ function ChatThread() {
           placeholder={empty ? "Message MiniCoder…" : "Reply to MiniCoder…"}
         />
       </div>
-      {openFilePath && (
-        <div className="hidden w-80 shrink-0 md:block">
-          <FilePreview />
-        </div>
-      )}
     </div>
   );
 }

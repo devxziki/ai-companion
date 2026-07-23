@@ -2,18 +2,15 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Archive, ArchiveRestore, Copy, Edit3, FolderOpen, MoreHorizontal, PanelLeftClose, PanelLeftOpen,
+  Archive, ArchiveRestore, Copy, Edit3, MoreHorizontal, PanelLeftClose, PanelLeftOpen,
   Pin, PinOff, Plus, Search, Settings as SettingsIcon, Trash2, X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { WordMark, Logo } from "./logo";
 import { ThemeSelector } from "./theme-selector";
 import { SettingsModal } from "./settings-modal";
-import { FileTree } from "./file-tree";
 import { useChatStore, type Chat } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
-import { useWorkspace } from "@/store/workspace-store";
-import { pickDirectory, readFileTree } from "@/lib/fs-access";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -195,10 +192,6 @@ function SidebarContent({
         )}
       </div>
 
-      <div className="border-t border-sidebar-border">
-        <WorkspaceSection collapsed={collapsed} />
-      </div>
-
       <div className={cn("border-t border-sidebar-border p-2", collapsed ? "flex flex-col items-center gap-1" : "flex items-center justify-between gap-1 px-3 py-2")}>
         {!collapsed && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -362,50 +355,6 @@ function ConversationItem({
         </AlertDialogContent>
       </AlertDialog>
     </li>
-  );
-}
-
-function WorkspaceSection({ collapsed }: { collapsed: boolean }) {
-  const rootHandle = useWorkspace((s) => s.rootHandle);
-  const rootName = useWorkspace((s) => s.rootName);
-  const setRoot = useWorkspace((s) => s.setRoot);
-  const setFileTree = useWorkspace((s) => s.setFileTree);
-
-  const openWorkspace = async () => {
-    const handle = await pickDirectory();
-    if (handle) {
-      setRoot(handle, handle.name);
-      const tree = await readFileTree(handle);
-      setFileTree(tree);
-    }
-  };
-
-  return (
-    <div className="px-2 py-2">
-      {!rootHandle ? (
-        <button
-          onClick={openWorkspace}
-          className={cn(
-            "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground",
-            collapsed && "justify-center px-0",
-          )}
-          title="Open workspace folder"
-        >
-          <FolderOpen className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Open workspace</span>}
-        </button>
-      ) : collapsed ? (
-        <button
-          onClick={openWorkspace}
-          className="mx-auto grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-          title={`Workspace: ${rootName}`}
-        >
-          <FolderOpen className="h-4 w-4" />
-        </button>
-      ) : (
-        <FileTree />
-      )}
-    </div>
   );
 }
 
