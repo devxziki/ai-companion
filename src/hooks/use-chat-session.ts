@@ -45,7 +45,7 @@ export function useChatSession(chatId: string | null) {
       if (project.rootHandle && project.rootName) {
         const tree = await readFileTree(project.rootHandle);
         const treeStr = tree.length > 0 ? tree.join("\n") : "(empty project)";
-        projectContext = `You have access to a local project folder "${project.rootName}". Here is its file tree:\n${treeStr}\n\nYou can read and write files in that folder. When the user asks you to create or edit files, respond with the file contents. After your explanation, include a JSON code block with files to create/modify:\n\`\`\`json\n{"files": [{"path": "relative/path.ext", "content": "file content here"}]}\n\`\`\`\nTo read an existing file, include: {"read": ["relative/path.ext"]} in the JSON block.\nAlways use relative paths from the project root. Do not write files without user consent.`;
+        projectContext = `You have access to a local project folder "${project.rootName}". Here is its file tree:\n${treeStr}\n\nYou can read and write files in that folder. When the user asks you to create or edit files, respond with the file contents. After your explanation, include a JSON code block with files to create/modify:\n\`\`\`json\n{"files": [{"path": "relative/path.ext", "content": "file content here"}]}\n\`\`\`\nTo read an existing file, include: {"read": ["relative/path.ext"]} in the JSON block.\nAlways use relative paths from the project root. Do not write files without user consent.\n\nIMPORTANT: When showing the file tree, list each file and folder on its own line. Never put multiple entries on the same line.`;
       }
 
       messages.unshift({

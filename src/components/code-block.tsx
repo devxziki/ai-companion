@@ -11,7 +11,7 @@ type Props = {
 
 export function CodeBlock({ code, language, className, children }: Props) {
   const [copied, setCopied] = useState(false);
-  const [wrap, setWrap] = useState(false);
+  const [wrap, setWrap] = useState(true);
   const lang = (language ?? "text").toLowerCase();
 
   const copy = async () => {
