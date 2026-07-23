@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Editor, { loader } from "@monaco-editor/react";
-import type { editor } from "monaco-editor";
 import { useWorkspace } from "@/store/workspace-store";
 import { useSettings } from "@/store/settings-store";
 import { EDITOR_THEMES } from "@/lib/monaco-themes";
@@ -43,7 +42,6 @@ export function FilePreview() {
   const openFiles = useWorkspace((s) => s.openFiles);
   const activeFilePath = useWorkspace((s) => s.activeFilePath);
   const appThemeId = useSettings((s) => s.theme);
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   const file = openFiles.find((f) => f.path === activeFilePath);
   const openFilePath = file?.path ?? null;
@@ -74,33 +72,41 @@ export function FilePreview() {
             <img src={openFileContent} alt={openFilePath} className="max-h-full max-w-full rounded-lg object-contain" />
           </div>
         ) : openFileContent !== null ? (
-          <Editor
-            key={`${openFilePath}-${monacoTheme}`}
-            language={lang}
-            value={openFileContent}
-            theme={monacoTheme}
-            onMount={(editor) => { editorRef.current = editor; }}
-            options={{
-              readOnly: true,
-              minimap: { enabled: true },
-              lineNumbers: "on",
-              renderLineHighlight: "all",
-              scrollBeyondLastLine: false,
-              fontSize: 13,
-              fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
-              fontLigatures: true,
-              tabSize: 2,
-              wordWrap: "off",
-              smoothScrolling: true,
-              cursorBlinking: "smooth",
-              cursorSmoothCaretAnimation: "on",
-              padding: { top: 8 },
-              folding: true,
-              foldingHighlight: true,
-              bracketPairColorization: { enabled: true },
-              automaticLayout: true,
-            }}
-          />
+          openFileContent.startsWith("// Unable") || openFileContent.startsWith("// Error") ? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 p-6">
+              <p className="text-sm text-destructive">File could not be loaded</p>
+              <pre className="w-full max-w-lg overflow-auto whitespace-pre-wrap rounded border border-border bg-muted/50 p-4 text-xs font-mono text-muted-foreground">
+                {openFileContent}
+              </pre>
+            </div>
+          ) : (
+            <Editor
+              key={`${openFilePath}-${monacoTheme}`}
+              language={lang}
+              value={openFileContent}
+              theme={monacoTheme}
+              options={{
+                readOnly: true,
+                minimap: { enabled: true },
+                lineNumbers: "on",
+                renderLineHighlight: "all",
+                scrollBeyondLastLine: false,
+                fontSize: 13,
+                fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
+                fontLigatures: true,
+                tabSize: 2,
+                wordWrap: "off",
+                smoothScrolling: true,
+                cursorBlinking: "smooth",
+                cursorSmoothCaretAnimation: "on",
+                padding: { top: 8 },
+                folding: true,
+                foldingHighlight: true,
+                bracketPairColorization: { enabled: true },
+                automaticLayout: true,
+              }}
+            />
+          )
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Loading…</div>
         )}
