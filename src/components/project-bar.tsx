@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Folder, FolderOpen, Plus, X } from "lucide-react";
+import { Folder, FolderOpen, X } from "lucide-react";
 import { useProject } from "@/store/project-store";
-import { pickDirectory, createDirectory } from "@/lib/fs-access";
-import { cn } from "@/lib/utils";
+import { pickDirectory } from "@/lib/fs-access";
 
 export function ProjectBar() {
   const rootHandle = useProject((s) => s.rootHandle);
@@ -13,15 +12,6 @@ export function ProjectBar() {
   const handleAdd = async () => {
     const handle = await pickDirectory();
     if (handle) setProject(handle, handle.name);
-  };
-
-  const handleCreate = async () => {
-    const name = prompt("Enter project name:");
-    if (!name?.trim()) return;
-    const base = await pickDirectory();
-    if (!base) return;
-    const ok = await createDirectory(base, name.trim());
-    if (ok) setProject(base, name.trim());
   };
 
   return (
@@ -39,23 +29,13 @@ export function ProjectBar() {
           </button>
         </div>
       ) : (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <FolderOpen className="h-3.5 w-3.5" />
-            Add project
-          </button>
-          <span className="text-xs text-muted-foreground/30">·</span>
-          <button
-            onClick={handleCreate}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Create project
-          </button>
-        </div>
+        <button
+          onClick={handleAdd}
+          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <FolderOpen className="h-3.5 w-3.5" />
+          Add project
+        </button>
       )}
     </div>
   );

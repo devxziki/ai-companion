@@ -9,7 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { WordMark, Logo } from "./logo";
 import { ThemeSelector } from "./theme-selector";
 import { SettingsModal } from "./settings-modal";
-import { ProjectSelector } from "./project-selector";
+
 import { useChatStore, type Chat } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
 import {
@@ -195,7 +195,6 @@ function SidebarContent({
         )}
       </div>
 
-      <ProjectSelector collapsed={collapsed} />
       <div className={cn("border-t border-sidebar-border", collapsed ? "flex flex-col items-center gap-1 py-2" : "flex items-center justify-between gap-1 px-3 py-2")}>
         {!collapsed && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
