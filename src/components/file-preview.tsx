@@ -44,7 +44,7 @@ export function FilePreview() {
   const rootHandle = useWorkspace((s) => s.rootHandle);
   const openFiles = useWorkspace((s) => s.openFiles);
   const activeFilePath = useWorkspace((s) => s.activeFilePath);
-  const openFile = useWorkspace((s) => s.openFile);
+  const updateFileContent = useWorkspace((s) => s.updateFileContent);
   const appThemeId = useSettings((s) => s.theme);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
@@ -61,7 +61,7 @@ export function FilePreview() {
       const f = openFiles.find((x) => x.path === activeFilePath);
       if (f && f.content === null && rootHandle) {
         readFile(rootHandle, activeFilePath).then((content) => {
-          openFile(activeFilePath, content ?? "// Unable to read file");
+          updateFileContent(activeFilePath, content ?? "// Unable to read file");
         });
       }
     }

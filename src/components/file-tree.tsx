@@ -78,6 +78,7 @@ function DirectoryTree({ dirPath, depth }: { dirPath: string; depth: number }) {
   const toggleExpanded = useWorkspace((s) => s.toggleExpanded);
   const activeFilePath = useWorkspace((s) => s.activeFilePath);
   const openFile = useWorkspace((s) => s.openFile);
+  const updateFileContent = useWorkspace((s) => s.updateFileContent);
   const [entries, setEntries] = useState<{ name: string; kind: string; path: string }[]>([]);
   const [loading, setLoading] = useState(true);
 

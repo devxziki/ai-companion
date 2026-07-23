@@ -110,22 +110,24 @@ function SidebarContent({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className={cn("flex items-center justify-between p-3", collapsed && "flex-col gap-2")}>
+      <div className={cn("flex items-center", collapsed ? "justify-center py-3" : "justify-between p-3")}>
         {collapsed ? (
-          <Logo size={30} />
+          <Logo size={28} />
         ) : (
           <Link to="/" className="block">
             <WordMark />
           </Link>
         )}
-        <button
-          onClick={onToggle}
-          className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-          aria-label="Toggle sidebar"
-          title="Toggle sidebar"
-        >
-          {toggleIcon ?? (collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />)}
-        </button>
+        {!collapsed && (
+          <button
+            onClick={onToggle}
+            className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            aria-label="Toggle sidebar"
+            title="Toggle sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className={cn("px-3", collapsed && "px-2")}>
@@ -192,7 +194,7 @@ function SidebarContent({
         )}
       </div>
 
-      <div className={cn("border-t border-sidebar-border p-2", collapsed ? "flex flex-col items-center gap-1" : "flex items-center justify-between gap-1 px-3 py-2")}>
+      <div className={cn("border-t border-sidebar-border", collapsed ? "flex flex-col items-center gap-1 py-2" : "flex items-center justify-between gap-1 px-3 py-2")}>
         {!collapsed && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <div className="h-7 w-7 rounded-full bg-gradient-to-br from-brand to-[oklch(0.72_0.18_200)]" />
@@ -209,6 +211,16 @@ function SidebarContent({
           >
             <SettingsIcon className="h-4 w-4" />
           </button>
+          {collapsed && (
+            <button
+              onClick={onToggle}
+              className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
