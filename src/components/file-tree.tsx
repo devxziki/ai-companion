@@ -78,7 +78,6 @@ function DirectoryTree({ dirPath, depth }: { dirPath: string; depth: number }) {
   const toggleExpanded = useWorkspace((s) => s.toggleExpanded);
   const activeFilePath = useWorkspace((s) => s.activeFilePath);
   const openFile = useWorkspace((s) => s.openFile);
-  const updateFileContent = useWorkspace((s) => s.updateFileContent);
   const [entries, setEntries] = useState<{ name: string; kind: string; path: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -105,14 +104,16 @@ function DirectoryTree({ dirPath, depth }: { dirPath: string; depth: number }) {
         return (
           <div key={entry.path}>
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (isDir) {
                   toggleExpanded(entry.path);
                 } else {
-                  openFile(entry.path, null);
-                  readFile(rootHandle, entry.path).then((content) => {
-                    updateFileContent(entry.path, content ?? "// Unable to read file");
-                  });
+                  try {
+                    const content = await readFile(rootHandle, entry.path);
+                    openFile(entry.path, content ?? "// Unable to load file");
+                  } catch (err) {
+                    openFile(entry.path, `// Error loading file:\n// ${err}`);
+                  }
                 }
               }}
               className={cn(

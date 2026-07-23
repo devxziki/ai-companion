@@ -3,7 +3,6 @@ import Editor, { loader } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useWorkspace } from "@/store/workspace-store";
 import { useSettings } from "@/store/settings-store";
-import { readFile } from "@/lib/fs-access";
 import { EDITOR_THEMES } from "@/lib/monaco-themes";
 import { getAppTheme } from "@/lib/app-themes";
 
@@ -41,10 +40,8 @@ function defineMonacoThemes(monaco: typeof import("monaco-editor")) {
 }
 
 export function FilePreview() {
-  const rootHandle = useWorkspace((s) => s.rootHandle);
   const openFiles = useWorkspace((s) => s.openFiles);
   const activeFilePath = useWorkspace((s) => s.activeFilePath);
-  const updateFileContent = useWorkspace((s) => s.updateFileContent);
   const appThemeId = useSettings((s) => s.theme);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
@@ -55,17 +52,6 @@ export function FilePreview() {
   useEffect(() => {
     loader.init().then(defineMonacoThemes);
   }, []);
-
-  useEffect(() => {
-    if (activeFilePath) {
-      const f = openFiles.find((x) => x.path === activeFilePath);
-      if (f && f.content === null && rootHandle) {
-        readFile(rootHandle, activeFilePath).then((content) => {
-          updateFileContent(activeFilePath, content ?? "// Unable to read file");
-        });
-      }
-    }
-  }, [activeFilePath]);
 
   if (!openFilePath) return null;
 

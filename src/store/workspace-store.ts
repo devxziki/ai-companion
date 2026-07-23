@@ -70,7 +70,10 @@ export const useWorkspace = create<WorkspaceState & WorkspaceActions>()((set) =>
     set((s) => {
       const exists = s.openFiles.find((f) => f.path === path);
       if (exists) {
-        return { activeFilePath: path };
+        return {
+          openFiles: s.openFiles.map((f) => (f.path === path ? { ...f, content } : f)),
+          activeFilePath: path,
+        };
       }
       return {
         openFiles: [...s.openFiles, { path, content }],
