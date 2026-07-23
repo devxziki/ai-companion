@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { WelcomeScreen } from "@/components/welcome-screen";
 import { ChatInput } from "@/components/chat-input";
+import { ProjectBar } from "@/components/project-bar";
 import { useChatStore, newMessage } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
 import { streamAI, generateTitle } from "@/lib/ai";
@@ -57,6 +58,7 @@ function ChatIndex() {
         autoFocus
         placeholder="Message MiniCoder…"
       />
+      <ProjectBar />
     </div>
   );
 }
