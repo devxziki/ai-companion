@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { WordMark, Logo } from "./logo";
-import { ThemeToggle } from "./theme-toggle";
+import { ThemeSelector } from "./theme-selector";
 import { SettingsModal } from "./settings-modal";
 import { FileTree } from "./file-tree";
 import { useChatStore, type Chat } from "@/store/chat-store";
@@ -207,7 +207,7 @@ function SidebarContent({
           </div>
         )}
         <div className={cn("flex items-center gap-1", collapsed && "flex-col")}>
-          <ThemeToggle />
+          <ThemeSelector />
           <button
             onClick={onOpenSettings}
             className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, FolderOpen, Github, Sparkles } from "lucide-react";
 import { Logo, WordMark } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeSelector } from "@/components/theme-selector";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -59,7 +59,7 @@ function Landing() {
           >
             <Github className="h-4 w-4" /> GitHub
           </a>
-          <ThemeToggle />
+          <ThemeSelector />
         </div>
       </header>
 

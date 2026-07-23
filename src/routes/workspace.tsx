@@ -6,6 +6,7 @@ import {
   ArrowLeft, FolderOpen, PanelLeftClose, PanelLeftOpen, X,
 } from "lucide-react";
 import { Logo, WordMark } from "@/components/logo";
+import { ThemeSelector } from "@/components/theme-selector";
 import { FileTree } from "@/components/file-tree";
 import { useWorkspace } from "@/store/workspace-store";
 import { pickDirectory, readFileTree } from "@/lib/fs-access";
@@ -135,6 +136,10 @@ function WorkspaceTopbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         <span className="text-sm font-medium">
           {rootName ? `Workspace: ${rootName}` : "Workspace"}
         </span>
+      </div>
+
+      <div className="ml-auto flex items-center gap-1">
+        <ThemeSelector />
       </div>
     </header>
   );

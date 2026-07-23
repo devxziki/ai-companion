@@ -1,14 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Editor, { loader } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
-import { X, FileCode, Copy, Check, Palette } from "lucide-react";
+import { X, FileCode, Copy, Check } from "lucide-react";
 import { useWorkspace } from "@/store/workspace-store";
+import { useSettings } from "@/store/settings-store";
 import { readFile } from "@/lib/fs-access";
-import { EDITOR_THEMES, DEFAULT_THEME_ID, type EditorTheme } from "@/lib/monaco-themes";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { EDITOR_THEMES } from "@/lib/monaco-themes";
+import { getAppTheme } from "@/lib/app-themes";
 
 const EXT_TO_LANG: Record<string, string> = {
   ts: "typescript", tsx: "typescript", js: "javascript", jsx: "javascript",
@@ -33,7 +31,7 @@ function detectLanguage(filePath: string): string {
 
 let themesDefined = false;
 
-function defineThemes(monaco: typeof import("monaco-editor")) {
+function defineMonacoThemes(monaco: typeof import("monaco-editor")) {
   if (themesDefined) return;
   themesDefined = true;
   for (const t of EDITOR_THEMES) {
@@ -48,8 +46,8 @@ export function FilePreview() {
   const openFilePath = useWorkspace((s) => s.openFilePath);
   const openFileContent = useWorkspace((s) => s.openFileContent);
   const setOpenFile = useWorkspace((s) => s.setOpenFile);
+  const appThemeId = useSettings((s) => s.theme);
   const [copied, setCopied] = useState(false);
-  const [editorTheme, setEditorTheme] = useState<string>(DEFAULT_THEME_ID);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
@@ -61,7 +59,7 @@ export function FilePreview() {
   }, [openFilePath, rootHandle]);
 
   useEffect(() => {
-    loader.init().then(defineThemes);
+    loader.init().then(defineMonacoThemes);
   }, []);
 
   if (!openFilePath) return null;
@@ -77,51 +75,29 @@ export function FilePreview() {
     }
   };
 
-  const lang = detectLanguage(openFilePath);
-  const currentTheme = EDITOR_THEMES.find((t) => t.id === editorTheme) ?? EDITOR_THEMES[0];
+  // Map app theme to Monaco theme
+  const monacoTheme = EDITOR_THEMES.find((t) => t.id === appThemeId)
+    ? appThemeId
+    : getAppTheme(appThemeId).type === "light"
+      ? "vs"
+      : "vs-dark";
 
-  const handleEditorMount = (editor: editor.IStandaloneCodeEditor) => {
-    editorRef.current = editor;
-  };
+  const lang = detectLanguage(openFilePath);
+  const fileName = openFilePath.split("/").pop();
 
   return (
-    <div className="flex h-full flex-col border-l border-sidebar-border bg-sidebar">
-      <div className="flex items-center justify-between border-b border-sidebar-border px-3 py-1.5">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
         <span className="truncate text-xs font-medium text-foreground" title={openFilePath}>
           <FileCode className="mr-1.5 inline h-3.5 w-3.5" />
-          {openFilePath.split("/").pop()}
+          {fileName}
           <span className="ml-2 text-muted-foreground/60 font-normal">{lang}</span>
         </span>
         <div className="flex items-center gap-0.5">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                title="Editor theme"
-              >
-                <Palette className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {EDITOR_THEMES.map((t) => (
-                <DropdownMenuItem
-                  key={t.id}
-                  onSelect={() => setEditorTheme(t.id)}
-                  className={cn(editorTheme === t.id && "text-brand font-medium")}
-                >
-                  <span
-                    className="mr-2 h-3 w-3 rounded-full shrink-0"
-                    style={{ backgroundColor: t.define.colors["editor.background"] ?? "#000" }}
-                  />
-                  {t.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
           {openFileContent && (
             <button
               onClick={copyContent}
-              className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+              className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
               title="Copy content"
             >
               {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -129,7 +105,7 @@ export function FilePreview() {
           )}
           <button
             onClick={() => setOpenFile(null, null)}
-            className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+            className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
             title="Close"
           >
             <X className="h-3.5 w-3.5" />
@@ -138,16 +114,16 @@ export function FilePreview() {
       </div>
       <div className="flex-1 overflow-hidden">
         {isImage && openFileContent ? (
-          <div className="flex h-full items-center justify-center p-4">
+          <div className="flex h-full items-center justify-center bg-background p-4">
             <img src={openFileContent} alt={openFilePath} className="max-h-full max-w-full rounded-lg object-contain" />
           </div>
         ) : openFileContent !== null ? (
           <Editor
-            key={`${openFilePath}-${editorTheme}`}
+            key={`${openFilePath}-${monacoTheme}`}
             language={lang}
             value={openFileContent}
-            theme={editorTheme}
-            onMount={handleEditorMount}
+            theme={monacoTheme}
+            onMount={(editor) => { editorRef.current = editor; }}
             options={{
               readOnly: true,
               minimap: { enabled: true },

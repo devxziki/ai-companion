@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { useSettings } from "../store/settings-store";
+import { getAppTheme } from "../lib/app-themes";
 
 function NotFoundComponent() {
   return (
@@ -133,12 +134,16 @@ function RootComponent() {
 }
 
 function ThemeApplier() {
-  const theme = useSettings((s) => s.theme);
+  const themeId = useSettings((s) => s.theme);
   useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
-    root.classList.toggle("light", theme === "light");
-    root.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    const theme = getAppTheme(themeId);
+    root.classList.toggle("light", theme.type === "light");
+    root.classList.toggle("dark", theme.type === "dark");
+    for (const [key, val] of Object.entries(theme.colors)) {
+      root.style.setProperty(key, val);
+    }
+  }, [themeId]);
   return null;
 }
