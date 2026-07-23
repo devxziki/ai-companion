@@ -4,7 +4,7 @@ import { WelcomeScreen } from "@/components/welcome-screen";
 import { ChatInput } from "@/components/chat-input";
 import { useChatStore, newMessage } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
-import { streamMockReply, generateTitle } from "@/lib/mock-ai";
+import { streamAI, generateTitle } from "@/lib/ai";
 
 export const Route = createFileRoute("/chat/")({
   component: ChatIndex,
@@ -26,9 +26,10 @@ function ChatIndex() {
     addMessage(id, user);
     const assistant = newMessage("assistant", "", model);
     addMessage(id, assistant);
-    // Kick off streaming; it will update the persisted store as tokens arrive.
-    streamMockReply(
-      prompt,
+    const messages = [{ role: "user" as const, content: prompt }];
+    streamAI(
+      messages,
+      model,
       (_c, full) => updateMessage(id, assistant.id, full),
       (full) => updateMessage(id, assistant.id, full),
     );

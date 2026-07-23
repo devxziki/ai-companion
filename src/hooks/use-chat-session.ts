@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { streamMockReply, generateTitle, type StreamHandle } from "@/lib/mock-ai";
+import { streamAI, generateTitle, type StreamHandle } from "@/lib/ai";
 import { newMessage, useChatStore } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
 
@@ -31,13 +31,25 @@ export function useChatSession(chatId: string | null) {
       store.addMessage(targetId, assistant);
       setStreaming(true);
 
-      handleRef.current = streamMockReply(
-        prompt,
+      const updatedChat = useChatStore.getState().chats[targetId];
+      const messages = updatedChat.messages
+        .filter((m) => m.id !== assistant.id)
+        .map((m) => ({ role: m.role, content: m.content }));
+
+      handleRef.current = streamAI(
+        messages,
+        model,
         (_chunk, full) => {
           store.updateMessage(targetId, assistant.id, full);
         },
         (full) => {
           store.updateMessage(targetId, assistant.id, full);
+          setStreaming(false);
+          handleRef.current = null;
+          streamingIdRef.current = null;
+        },
+        (err) => {
+          store.updateMessage(targetId, assistant.id, `Error: ${err.message}`);
           setStreaming(false);
           handleRef.current = null;
           streamingIdRef.current = null;
