@@ -17,25 +17,27 @@ export function ProjectBar() {
   return (
     <div className="mx-auto w-full max-w-3xl px-3 pb-2 sm:px-4">
       {rootHandle ? (
-        <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5">
-          <Folder className="h-3.5 w-3.5 shrink-0 text-brand" />
-          <span className="flex-1 truncate text-xs font-medium text-foreground/80">{rootName}</span>
+        <div className="flex items-center justify-center gap-1.5">
+          <Folder className="h-3 w-3 text-brand/60" />
+          <span className="text-[11px] text-muted-foreground/50">{rootName}</span>
           <button
             onClick={clearProject}
-            className="grid h-5 w-5 place-items-center rounded text-muted-foreground/50 hover:bg-accent hover:text-foreground"
+            className="grid h-4 w-4 place-items-center rounded text-muted-foreground/30 hover:text-foreground/60"
             title="Close project"
           >
-            <X className="h-3 w-3" />
+            <X className="h-2.5 w-2.5" />
           </button>
         </div>
       ) : (
-        <button
-          onClick={handleAdd}
-          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <FolderOpen className="h-3.5 w-3.5" />
-          Add project
-        </button>
+        <div className="flex justify-center">
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <FolderOpen className="h-3.5 w-3.5" />
+            Add project
+          </button>
+        </div>
       )}
     </div>
   );
