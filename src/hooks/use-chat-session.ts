@@ -3,7 +3,7 @@ import { streamAI, generateTitle, type StreamHandle } from "@/lib/ai";
 import { newMessage, useChatStore } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
 import { useProject } from "@/store/project-store";
-import { writeFile } from "@/lib/fs-access";
+import { writeFile, readFileTree } from "@/lib/fs-access";
 
 export function useChatSession(chatId: string | null) {
   const store = useChatStore();
@@ -13,7 +13,7 @@ export function useChatSession(chatId: string | null) {
   const streamingIdRef = useRef<string | null>(null);
 
   const send = useCallback(
-    (prompt: string, opts?: { targetChatId?: string }) => {
+    async (prompt: string, opts?: { targetChatId?: string }) => {
       const targetId = opts?.targetChatId ?? chatId;
       if (!targetId) return;
 
@@ -41,7 +41,9 @@ export function useChatSession(chatId: string | null) {
       const project = useProject.getState();
       let projectContext = "";
       if (project.rootHandle && project.rootName) {
-        projectContext = `You have access to a local project folder "${project.rootName}". You can read and write files in that folder. When the user asks you to create or edit files, respond with the file contents. After your explanation, include a JSON code block with files to create/modify:\n\`\`\`json\n{"files": [{"path": "relative/path.ext", "content": "file content here"}]}\n\`\`\`\nAlways use relative paths from the project root. Do not write files without user consent. You can read existing files too.`;
+        const tree = await readFileTree(project.rootHandle);
+        const treeStr = tree.length > 0 ? tree.join("\n") : "(empty project)";
+        projectContext = `You have access to a local project folder "${project.rootName}". Here is its file tree:\n${treeStr}\n\nYou can read and write files in that folder. When the user asks you to create or edit files, respond with the file contents. After your explanation, include a JSON code block with files to create/modify:\n\`\`\`json\n{"files": [{"path": "relative/path.ext", "content": "file content here"}]}\n\`\`\`\nTo read an existing file, include: {"read": ["relative/path.ext"]} in the JSON block.\nAlways use relative paths from the project root. Do not write files without user consent.`;
       }
 
       messages.unshift({
@@ -80,7 +82,7 @@ export function useChatSession(chatId: string | null) {
   }, []);
 
   const regenerate = useCallback(
-    (assistantId: string) => {
+    async (assistantId: string) => {
       if (!chatId) return;
       const chat = useChatStore.getState().chats[chatId];
       if (!chat) return;
@@ -90,20 +92,20 @@ export function useChatSession(chatId: string | null) {
       if (!prevUser) return;
       // Trim messages from the assistant onward and re-send.
       store.replaceMessages(chatId, chat.messages.slice(0, idx));
-      send(prevUser.content);
+      await send(prevUser.content);
     },
     [chatId, send, store],
   );
 
   const editUser = useCallback(
-    (userMsgId: string, newContent: string) => {
+    async (userMsgId: string, newContent: string) => {
       if (!chatId) return;
       const chat = useChatStore.getState().chats[chatId];
       if (!chat) return;
       const idx = chat.messages.findIndex((m) => m.id === userMsgId);
       if (idx < 0) return;
       store.replaceMessages(chatId, chat.messages.slice(0, idx));
-      send(newContent);
+      await send(newContent);
     },
     [chatId, send, store],
   );

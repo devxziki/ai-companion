@@ -106,6 +106,30 @@ export async function listDirectory(
   }
 }
 
+export async function readFileTree(
+  root: FileSystemDirectoryHandle,
+  path: string = "",
+  depth: number = 0,
+): Promise<string[]> {
+  const maxDepth = 5;
+  if (depth > maxDepth) return [];
+  try {
+    const entries = await listDirectory(root, path);
+    const result: string[] = [];
+    for (const entry of entries) {
+      const prefix = "  ".repeat(depth);
+      result.push(`${prefix}${entry.kind === "directory" ? "📁" : "📄"} ${entry.name}`);
+      if (entry.kind === "directory") {
+        const children = await readFileTree(root, entry.path, depth + 1);
+        result.push(...children);
+      }
+    }
+    return result;
+  } catch {
+    return [];
+  }
+}
+
 async function resolveDirHandle(
   root: FileSystemDirectoryHandle,
   path: string,
