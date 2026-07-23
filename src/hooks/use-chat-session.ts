@@ -3,7 +3,7 @@ import { streamAI, generateTitle, type StreamHandle } from "@/lib/ai";
 import { newMessage, useChatStore } from "@/store/chat-store";
 import { useSettings } from "@/store/settings-store";
 import { useProject } from "@/store/project-store";
-import { readFile, writeFile } from "@/lib/fs-access";
+import { writeFile } from "@/lib/fs-access";
 
 export function useChatSession(chatId: string | null) {
   const store = useChatStore();
@@ -121,13 +121,31 @@ async function executeFileOps(aiResponse: string) {
 
   try {
     const parsed = JSON.parse(jsonMatch[1]);
+    const { read: readPaths } = parsed as { read?: string[] };
     const files: { path: string; content: string }[] = parsed.files ?? [];
-    if (files.length === 0) return;
+
+    if (!readPaths?.length && !files.length) return;
 
     let report = "\n\n---\n**File operations:**\n";
-    for (const f of files) {
-      const ok = await writeFile(root, f.path, f.content);
-      report += `- ${ok ? "✅" : "❌"} ${f.path}\n`;
+
+    if (files.length > 0) {
+      for (const f of files) {
+        const { readFile } = await import("@/lib/fs-access");
+        const ok = await writeFile(root, f.path, f.content);
+        report += `- ${ok ? "✅" : "❌"} Wrote ${f.path}\n`;
+      }
+    }
+
+    if (readPaths?.length) {
+      const { readFile } = await import("@/lib/fs-access");
+      for (const p of readPaths) {
+        const content = await readFile(root, p);
+        if (content !== null) {
+          report += `- 📄 Read ${p}\n\`\`\`\n${content.slice(0, 2000)}${content.length > 2000 ? "\n…" : ""}\n\`\`\`\n`;
+        } else {
+          report += `- ❌ Could not read ${p}\n`;
+        }
+      }
     }
 
     const store = useChatStore.getState();

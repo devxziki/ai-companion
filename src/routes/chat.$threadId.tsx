@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChatInput } from "@/components/chat-input";
 import { ChatMessage } from "@/components/chat-message";
 import { WelcomeScreen } from "@/components/welcome-screen";
+import { ProjectBar } from "@/components/project-bar";
 import { useChatStore } from "@/store/chat-store";
 import { useChatSession } from "@/hooks/use-chat-session";
 
@@ -75,6 +76,7 @@ function ChatThread() {
           autoFocus
           placeholder={empty ? "Message MiniCoder…" : "Reply to MiniCoder…"}
         />
+        <ProjectBar />
       </div>
     </div>
   );
